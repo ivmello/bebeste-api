@@ -23,4 +23,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::get('/users', [UsersController::class, 'index']);
 Route::get('/scores', [ScoresController::class, 'index']);
 Route::post('/scores', [ScoresController::class, 'create']);
-Route::put('/scores/{user}', [ScoresController::class, 'update']);
+// Route::put('/scores/{user}', [ScoresController::class, 'update']);

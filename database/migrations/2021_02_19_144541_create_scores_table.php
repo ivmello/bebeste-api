@@ -20,9 +20,10 @@ class CreateScoresTable extends Migration
             $table->foreign('user_id')->references('id')->on('users');
 
             $table->date('date')->useCurrent();
-            $table->integer('price')->default(0);
+            $table->integer('total')->default(0);
+            $table->integer('price_of_day')->default(0);
+            $table->boolean('drank')->default(false);
             $table->integer('day')->default(0);
-            $table->boolean('drink')->default(false);
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();

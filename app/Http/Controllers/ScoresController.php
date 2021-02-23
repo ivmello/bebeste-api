@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Price;
 use App\Models\User;
 use App\Models\Score;
 use Carbon\Carbon;
@@ -15,44 +16,44 @@ class ScoresController extends Controller
     }
 
     public function create(Request $request) {
-        $users = User::all();
-        $price = rand(1,5);
+        $price_of_day = rand(1,5) * 100;
         $date = date('Y-m-d');
 
-        foreach($users as $user) {
-            $exists = $user->scores()->where('date', $date)->get();
-            $day = Carbon::now()->dayOfWeek;
+        $user_id = $request->get('user_id');
+        $drank = $request->get('drank');
 
-            if ($exists->isEmpty()) {
-                $score = new Score();
-                $score->user_id = $user->id;
-                $score->price = $price;
-                $score->date = $date;
-                $score->day = $day;
-                $score->save();
-            }
+        $price_db = Price::where('date', $date)->get();
+        if ($price_db->isEmpty()) {
+            $price_db = Price::create([
+                'date' => $date,
+                'value' => $price_of_day
+            ]);
         }
 
-        return response()->json([
-            'msg' => 'ok'
-        ]);
-    }
+        $user = User::find($user_id);
 
-    public function update(Request $request, User $user) {
-        $params = $request->all();
+        if (empty($user)) {
+            return response()->json([
+                'msg' => 'Usuário não existe',
+            ]);
+        }
 
-        if (!empty($params['date'])) {
+        $score_exists = $user->scores()->where('date', $date)->get();
 
-            $score = $user->scores()->where('date', $params['date'])->first();
-            $score->drink = 1;
+        if ($score_exists->isEmpty()) {
+            $score = new Score();
+            $score->user_id = $user_id;
+            $score->total = $drank ? 0 : $price_of_day;
+            $score->drank = $drank;
+            $score->date = $date;
+            $score->price_of_day = $price_of_day;
             $score->save();
-
-            return response()->json($score);
+        } else {
+            return response()->json([
+                'msg' => 'Você já atualizou sua conta hoje',
+            ]);
         }
 
-        // $user->scores()->
-        return response()->json([
-            'msg' => 'Date is missing',
-        ]);
+        return response()->json($score);
     }
 }
