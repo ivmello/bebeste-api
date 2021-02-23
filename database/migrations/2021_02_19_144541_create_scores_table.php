@@ -23,7 +23,8 @@ class CreateScoresTable extends Migration
             $table->integer('total')->default(0);
             $table->integer('price_of_day')->default(0);
             $table->boolean('drank')->default(false);
-            $table->integer('day')->default(0);
+            $table->integer('week_of_year')->default(0);
+            $table->integer('day_of_week')->default(0);
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();

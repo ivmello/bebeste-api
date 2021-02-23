@@ -16,18 +16,22 @@ class ScoresController extends Controller
     }
 
     public function create(Request $request) {
-        $price_of_day = rand(1,5) * 100;
         $date = date('Y-m-d');
+        $day_of_week = Carbon::now()->dayOfWeekIso;
+        $week_of_year = Carbon::now()->weekOfYear;
 
         $user_id = $request->get('user_id');
         $drank = $request->get('drank');
 
-        $price_db = Price::where('date', $date)->get();
-        if ($price_db->isEmpty()) {
+        $price_db = Price::where('date', $date)->first();
+        if (empty($price_db)) {
+            $price_of_day = rand(1,5) * 100;
             $price_db = Price::create([
                 'date' => $date,
                 'value' => $price_of_day
             ]);
+        } else {
+            $price_of_day = $price_db->value;
         }
 
         $user = User::find($user_id);
@@ -43,9 +47,11 @@ class ScoresController extends Controller
         if ($score_exists->isEmpty()) {
             $score = new Score();
             $score->user_id = $user_id;
-            $score->total = $drank ? 0 : $price_of_day;
+            $score->total = $drank == 1 ? 0 : $price_of_day;
             $score->drank = $drank;
             $score->date = $date;
+            $score->day_of_week = $day_of_week;
+            $score->week_of_year = $week_of_year;
             $score->price_of_day = $price_of_day;
             $score->save();
         } else {
