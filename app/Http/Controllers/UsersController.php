@@ -30,9 +30,8 @@ class UsersController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'total' => $user->total ? $user->total : 0,
-                    'price_of_day' => $price->value,
+                    'price_of_day' => !empty($price->value) ? $price->value : 0,
                     'frequency' => $frequency,
-                    'date' => $price->date,
                 ));
             }
         } else {
