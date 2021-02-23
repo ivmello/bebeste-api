@@ -40,4 +40,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    function scores() {
+        return $this->hasMany(Score::class);
+    }
+
+    function total() {
+        return $this->hasMany(Score::class);
+    }
 }
