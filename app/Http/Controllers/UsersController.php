@@ -76,7 +76,7 @@ class UsersController extends Controller
 
                 $score = new Score();
                 $score->user_id = $user_random->id;
-                $score->total = 100;
+                $score->total = 50;
                 $score->date = date('Y-m-d');
                 $score->save();
             }
@@ -91,7 +91,7 @@ class UsersController extends Controller
 
                 $score = new Score();
                 $score->user_id = $user_random->id;
-                $score->total = 100;
+                $score->total = 50;
                 $score->date = date('Y-m-d');
                 $score->save();
             }
