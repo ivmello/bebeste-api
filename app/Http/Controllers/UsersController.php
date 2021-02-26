@@ -26,7 +26,7 @@ class UsersController extends Controller
         $price = Price::where('date', date('Y-m-d'))->first();
         $result = array();
 
-        if ($day_of_week == 4) {
+        if ($day_of_week == 5) {
             $this->solveDraw($users, $day_of_week);
         }
 
