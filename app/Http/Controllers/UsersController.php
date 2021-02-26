@@ -16,28 +16,34 @@ class UsersController extends Controller
         $week_of_year = Carbon::now()->weekOfYear;
         $day_of_week = Carbon::now()->dayOfWeekIso;
 
-        $usersData = User::select('users.id', 'users.name', DB::raw('SUM(scores.total) As total'))
-         ->leftJoin('scores', 'scores.user_id', '=', 'users.id')
-         ->groupBy('users.id');
+        $usersData = User::select('users.id', 'users.name', 'scores.winner', 'scores.loser', DB::raw('COALESCE(SUM(scores.total), 0) As total'))
+        ->leftJoin('scores', 'scores.user_id', '=', 'users.id')
+        ->groupBy('users.id', 'scores.winner', 'scores.loser')
+        ->orderBY('total', 'DESC');
 
-        $users = $usersData->orderBy('total', 'DESC')->get();
+        $users = $usersData->get();
 
         $price = Price::where('date', date('Y-m-d'))->first();
         $result = array();
 
-        $this->solveDraw($users, $day_of_week);
+        if ($day_of_week == 4) {
+            $this->solveDraw($users, $day_of_week);
+        }
 
-        $users = $usersData->orderBy('total', 'DESC')->get();
+        $users = $usersData->get();
 
         if (!empty($users)) {
-            foreach($users as $user) {
+            foreach($users as $i => $user) {
                 $frequency = $user->scores()->select('id', 'user_id', 'day_of_week', 'week_of_year', 'drank')->where('week_of_year', $week_of_year)->get();
 
                 array_push($result, array(
                     'id' => $user->id,
                     'name' => $user->name,
                     'total' => $user->total ? $user->total : 0,
+                    'winner' => $users[0]->id == $user->id ? 1 : 0,
+                    'loser' => $users[count($users)-1]->id == $user->id ? 1 : 0,
                     'price_of_day' => !empty($price->value) ? $price->value : 0,
+                    'day_of_week' => $day_of_week,
                     'frequency' => $frequency,
                 ));
             }
@@ -49,51 +55,53 @@ class UsersController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'total' => 0,
+                    'winner' => $users[0]->id == $user->id ? 1 : 0,
+                    'loser' => $users[count($users)-1]->id == $user->id ? 1 : 0,
                     'price_of_day' => 0,
+                    'day_of_week' => $day_of_week,
                     'frequency' => $frequency,
                     'date' => date('Y-m-d'),
                 ));
             }
         }
 
-         return response()->json($result);
+        return response()->json($result);
     }
 
     private function solveDraw($users, $day_of_week) {
-        if ($day_of_week == 4) {
-            $user_winner_1 = $users[0];
-            $user_winner_2 = $users[1];
-            $user_loser_1 = $users[count($users) - 1];
-            $user_loser_2 = $users[count($users) - 2];
+        $user_winner_1 = $users[0];
+        $user_winner_2 = $users[1];
+        $user_loser_1 = $users[count($users) - 1];
+        $user_loser_2 = $users[count($users) - 2];
 
-            /**
-             * Resolve empate entre os perdedores
-             */
-            if ($user_loser_1->total == $user_loser_2->total) {
-                $arr_tmp = [$user_loser_1, $user_loser_2];
-                shuffle($arr_tmp);
-                $user_random = $arr_tmp[0];
+        $tmp_winners = array();
+        $tmp_losers = array();
+        foreach($users as $i => $user) {
+            if ($i < count($users) - 1 && $users[$i]->total == $users[$i + 1]->total) {
+                $tmp_winners[$i] = $users[$i];
+                $tmp_winners[$i+1] = $users[$i+1];
 
-                $score = new Score();
-                $score->user_id = $user_random->id;
-                $score->total = 50;
-                $score->date = date('Y-m-d');
-                $score->save();
-            }
-
-            /**
-             * Resolve empate entre os vencedores
-             */
-            if ($user_winner_1->total == $user_winner_2->total) {
-                $arr_tmp = [$user_winner_1, $user_winner_2];
-                shuffle($arr_tmp);
-                $user_random = $arr_tmp[0];
+                shuffle($tmp_winners);
 
                 $score = new Score();
-                $score->user_id = $user_random->id;
-                $score->total = 50;
+                $score->user_id = $tmp_winners[0]->id;
+                $score->total = rand(25,50);
                 $score->date = date('Y-m-d');
                 $score->save();
+
+            } else {
+                if ($i < count($users) - 2 && $users[($i+1)]->total == $users[($i+1) + 1]->total) {
+                    $tmp_losers[($i+1)] = $users[($i+1)];
+                    $tmp_losers[($i+1)+1] = $users[($i+1)+1];
+
+                    shuffle($tmp_losers);
+
+                    $score = new Score();
+                    $score->user_id = $tmp_losers[0]->id;
+                    $score->total = rand(1,25);
+                    $score->date = date('Y-m-d');
+                    $score->save();
+                }
             }
         }
     }
