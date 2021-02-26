@@ -16,9 +16,9 @@ class UsersController extends Controller
         $week_of_year = Carbon::now()->weekOfYear;
         $day_of_week = Carbon::now()->dayOfWeekIso;
 
-        $usersData = User::select('users.id', 'users.name', 'scores.winner', 'scores.loser', DB::raw('COALESCE(SUM(scores.total), 0) As total'))
+        $usersData = User::select('users.id', 'users.name', DB::raw('COALESCE(SUM(scores.total), 0) As total'))
         ->leftJoin('scores', 'scores.user_id', '=', 'users.id')
-        ->groupBy('users.id', 'scores.winner', 'scores.loser')
+        ->groupBy('users.id')
         ->orderBY('total', 'DESC');
 
         $users = $usersData->get();
