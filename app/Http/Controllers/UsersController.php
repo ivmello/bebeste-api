@@ -16,9 +16,36 @@ class UsersController extends Controller
         $week_of_year = Carbon::now()->weekOfYear;
         $day_of_week = Carbon::now()->dayOfWeekIso;
 
-        $usersData = User::select('users.id', 'users.name', DB::raw('COALESCE(SUM(scores.total), 0) As total'))
-        ->leftJoin('scores', 'scores.user_id', '=', 'users.id')
-        ->groupBy('users.id')
+        /**
+         * quando começa a semana, limpa o total da semana de cada um
+         */
+        if ($day_of_week == 1) {
+            $users = User::all();
+
+            foreach ($users as $user) {
+                $scores = $user->scores()->where([
+                    'date' => date('Y-m-d'),
+                ])->get();
+
+                if($scores->isEmpty()) {
+                    $user->total_of_week = 0;
+                    $user->save();
+                }
+            }
+        }
+
+        /**
+         * Forma antiga de trazer os scores. Antes ele juntava a tabela, agora ele salva direto na table do usuario
+         */
+        // $usersData = User::select('users.id', 'users.name', DB::raw('COALESCE(SUM(scores.total), 0) As total'))
+        // ->leftJoin('scores', 'scores.user_id', '=', 'users.id')
+        // ->groupBy('users.id')
+        // ->orderBY('total', 'DESC');
+
+        /**
+         * Agora busca o total_of_week e converte para total
+         */
+        $usersData = User::select('users.id', 'users.name', 'users.total_of_week as total')
         ->orderBY('total', 'DESC');
 
         $users = $usersData->get();

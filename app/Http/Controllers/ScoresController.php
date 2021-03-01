@@ -54,6 +54,10 @@ class ScoresController extends Controller
             $score->week_of_year = $week_of_year;
             $score->price_of_day = $price_of_day;
             $score->save();
+
+            $user->total_of_week = $user->total_of_week + $score->total;
+            $user->save();
+
         } else {
             return response()->json([
                 'msg' => 'Você já atualizou sua conta hoje',
