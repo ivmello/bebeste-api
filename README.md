@@ -1,3 +1,9 @@
 # API Bebeste
 
-Aplicação feita para controlar o fluxo de interações com o banco e gerar automação para criação de score, usuarios e somatório de pontos.
+A API possui as seguintes funcionalidades:
+
+- Grava os votos dos participantes;
+- Retorna a soma no fim da semana;
+- Reseta as pontuações toda segunda-feira;
+- Gera a pontuação aleatória do dia;
+- Ordena os usuários para ficar visualmente mais facil de ver quem está ganhando e perdendo.
